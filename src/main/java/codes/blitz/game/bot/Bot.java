@@ -1,15 +1,15 @@
 package codes.blitz.game.bot;
 
 import codes.blitz.game.message.game.GameMap;
-import codes.blitz.game.message.game.Path;
+import codes.blitz.game.message.game.PlayArea;
 import codes.blitz.game.message.game.Point;
 import codes.blitz.game.message.game.GameMessage;
-import codes.blitz.game.message.game.commands.Command;
-import codes.blitz.game.message.game.commands.CommandActionSendReinforcements;
+import codes.blitz.game.message.game.commands.*;
 import codes.blitz.game.message.game.enemies.EnemyType;
+import codes.blitz.game.message.game.towers.TowerType;
+import codes.blitz.game.message.game.Path;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Bot
 {
@@ -18,17 +18,10 @@ public class Bot
     private int[][] mapD1, mapD2;
 
     // Listes des truc a placer
-    List<Point> pufferSpot = new ArrayList<>();
-
-    // Si les unités nécessaires sont déja placer
-    private boolean lancier, cannonier;
-
     public Bot()
     {
-        System.out.println("Daddy");
+        System.out.println("Papa ?");
         // initialize some variables you will need throughout the game here
-        lancier = false;
-        cannonier = false;
     }
 
     /*
@@ -48,24 +41,82 @@ public class Bot
 
             // Calculer tous les nombre de chemin de 3
 
-            for (int i = 0; i < gameMap.height(); i++)
-            {
-                for (int j = 0; j < gameMap.width(); j++)
-                {
-                    if (mapD1[i][j] >= 3)
-                    {
-                        pufferSpot.add(new Point(j, i));
-                    }
-                }
-            }
+
+
         }
 
         // Placer les unités sur les troisChemin
 
+        int i = 0;
+        int sentNumber = 0;
 
-        command.addAction(new CommandActionSendReinforcements(EnemyType.LVL1,
-                List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
+        double fric = gameMessage.teamInfos().get(gameMessage.teamId()).money().doubleValue();
 
+        if(gameMessage.round().equals(1)) {
+            while (fric >= 15 && sentNumber < 8) {
+                command.addAction(new CommandActionSendReinforcements(EnemyType.LVL2, List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
+                fric -= 15;
+                sentNumber++;
+            }
+        }
+
+        if((int)gameMessage.round() >= 15){
+            while (fric >= 120 && sentNumber < 3) {
+                command.addAction(new CommandActionSendReinforcements(EnemyType.LVL9, List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
+                fric -= 120;
+                sentNumber++;
+            }
+        }
+
+        while(fric >= 280) {
+            // make a tupple of the number of tiles and the point
+            maxPath = (0, new Point(0,0));
+
+            for (int i = 0; i < gameMap.height(); i++)
+            {
+                for (int j = 0; j < gameMap.width(); j++)
+                {
+                    if (mapD1[i][j] >= 2)
+                    {
+                        if (mapD1[i][j] > maxPath.getKey())
+                        {
+                            maxPath = (mapD1[i][j], new Point(i, j));
+                        }
+                    }
+                }
+            }
+            Point newPoint = maxPath.getValue();
+            command.addAction((new CommandActionBuild(TowerType.SPIKE_SHOOTER, newPoint)));
+        }
+
+        while (fric >= 20000000) {
+
+            boolean placed = false;
+
+            while (!placed) {
+                int x = (int) (Math.random() * (gameMessage.map().width() - 1));
+                int y = (int) (Math.random() * (gameMessage.map().height() - 1));
+                Point newPoint = new Point(x, y);
+
+                if (gameMessage.playAreas().get(gameMessage.teamId()).grid().isEmpty(newPoint)) {
+                    command.addAction((new CommandActionBuild(TowerType.SPEAR_SHOOTER, newPoint)));
+
+                    System.out.println("New tower at " + x + "-" + y);
+                    placed = true;
+                    break;
+
+                }
+            }
+
+            fric -= 200;
+        }
+
+        // 3 possible commands: BUILD, SELL OR SEND_REINFORCEMENT ! Here are a few examples.
+//        command.addAction(new CommandActionBuild(TowerType.SPIKE_SHOOTER, new Point(10,10)));
+//        command.addAction(new CommandActionBuild(TowerType.SPEAR_SHOOTER, new Point(5, 4)));
+//        command.addAction(new CommandActionSell(new Point(10,10)));
+//        command.addAction(new CommandActionSendReinforcements(EnemyType.LVL1,
+//                List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
         return command;
     }
 
