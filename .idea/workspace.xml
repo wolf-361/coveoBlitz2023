@@ -5,6 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6704d0bc-0d05-4193-944e-c7d7f4941087" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/codes/blitz/game/bot/Bot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/codes/blitz/game/bot/Bot.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -91,7 +92,7 @@
       <option name="presentableId" value="Default" />
       <updated>1673704628606</updated>
       <workItem from="1673704629884" duration="5436000" />
-      <workItem from="1673711296863" duration="1118000" />
+      <workItem from="1673711296863" duration="3125000" />
     </task>
     <servers />
   </component>
