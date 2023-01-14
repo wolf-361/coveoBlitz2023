@@ -39,6 +39,14 @@ public class Bot
             }
         }
 
+        if((int)gameMessage.round() >= 15){
+            while (fric >= 120 && sentNumber < 3) {
+                command.addAction(new CommandActionSendReinforcements(EnemyType.LVL9, List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
+                fric -= 120;
+                sentNumber++;
+            }
+        }
+
         while (fric >= 200) {
 
             boolean placed = false;
