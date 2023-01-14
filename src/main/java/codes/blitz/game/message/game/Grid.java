@@ -16,6 +16,6 @@ public class Grid extends HashMap<Integer, HashMap<Integer, Tile>>
         if (tile.isEmpty()) {
             return true;
         }
-        return tile.get().towers().length == 0 && tile.get().enemies().length == 0;
+        return tile.get().towers().length == 0 && tile.get().enemies().length == 0 && tile.get().paths().length == 0 && !tile.get().hasObstacle();
     }
 }
