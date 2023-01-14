@@ -15,7 +15,7 @@ public class Bot
 {
     public Bot()
     {
-        System.out.println("Initializing your super duper mega bot.");
+        System.out.println("Papa ?");
         // initialize some variables you will need throughout the game here
     }
 
@@ -24,20 +24,40 @@ public class Bot
      */
     public Command getCommand(GameMessage gameMessage)
     {
-        boolean placed = false;
         Command command =  new Command();
-        while ((int)gameMessage.teamInfos().get(gameMessage.teamId()).money() >= 200) {
-            do {
-                placed = false;
+
+        int i = 0;
+        int fric = (int) gameMessage.teamInfos().get(gameMessage.teamId()).money();
+
+        System.out.println("début boucle argent");
+        while(fric >= 200) {
+
+            boolean placed = false;
+
+            System.out.println("Début boucle génération point");
+            while(!placed) {
                 int x = (int) (Math.random() * (gameMessage.map().width() - 1));
                 int y = (int) (Math.random() * (gameMessage.map().height() - 1));
-                Point point = new Point(x, y);
-                if (gameMessage.playAreas().get(gameMessage.teamId()).grid().get(point).isEmpty()) {
-                    command.addAction((new CommandActionBuild(TowerType.SPEAR_SHOOTER, point)));
+                Point newPoint = new Point(x, y);
+
+                System.out.println("Random point = "+ x + "-" + y);
+
+                if(gameMessage.playAreas().get(gameMessage.teamId()).grid().isEmpty(newPoint)) {
+                    command.addAction((new CommandActionBuild(TowerType.SPEAR_SHOOTER, newPoint)));
+
+                    System.out.println("Le nouveau point a été placé");
                     placed = true;
+                    break;
+
+                } else {
+                    System.out.println("Génération d'un nouveau point...");
                 }
-            } while (!placed);
+            }
+            System.out.println("Sortie boucle génération point");
+
+            fric -= 200;
         }
+        System.out.println("Sortie boucle argent");
 
         // 3 possible commands: BUILD, SELL OR SEND_REINFORCEMENT ! Here are a few examples.
 //        command.addAction(new CommandActionBuild(TowerType.SPIKE_SHOOTER, new Point(10,10)));
