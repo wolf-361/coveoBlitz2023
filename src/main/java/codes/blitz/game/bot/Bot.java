@@ -44,83 +44,8 @@ public class Bot
         {
             // get the original map
             gameMap = gameMessage.map();
-
-            // calculate the path
-            Path[] path = gameMap.paths();
-
-            // width = y et height = x
-            int[][] map = new int[gameMap.height()][gameMap.width()];
-            mapD1 = new int[gameMap.height()][gameMap.width()];
-            mapD2 = new int[gameMap.height()][gameMap.width()];
-
-            // initialize la map a zero
-            for (int i = 0; i < gameMap.height(); i++)
-            {
-                for (int j = 0; j < gameMap.width(); j++)
-                {
-                    map[i][j] = 0;
-                    mapD1[i][j] = 0;
-                    mapD2[i][j] = 0;
-                }
-            }
-
-            // Ajouter les chemin comme -1
-            for (int i = 0; i < path.length; i++) {
-                for (int j = 0; j < path[i].tiles().length; j++) {
-                    // le point du chemin
-                    Point point = path[i].tiles()[j];
-                    map[point.y()][point.x()] = -1;
-                    mapD1[point.y()][point.x()] = -1;
-                    mapD2[point.y()][point.x()] = -1;
-                }
-            }
-
-            // On itterre sur la map pour calculer le nombre de tuiles du chemin accessible depuis chaque tuile
-            for (int i = 0; i < gameMap.height(); i++)
-            {
-                for (int j = 0; j < gameMap.width(); j++)
-                {
-                    // Si la tuile n'est pas un chemin
-                    if (map[i][j] != -1)
-                    {
-                        // On itterre sur les tuiles adjacentes avec D1
-                        for (int k = i - 1; k <= i + 1; k++)
-                        {
-                            for (int l = j - 1; l <= j + 1; l++)
-                            {
-                                // Si la tuile est dans la map
-                                if (k >= 0 && k < gameMap.height() && l >= 0 && l < gameMap.width())
-                                {
-                                    // Si la tuile est un chemin
-                                    if (map[k][l] == -1)
-                                    {
-                                        // On incremente le nombre de chemin accessible
-                                        mapD1[i][j]++;
-                                    }
-                                }
-                            }
-                        }
-
-                        // On itterre sur les tuiles adjacentes avec D2
-                        for (int k = i - 2; k <= i + 2; k++)
-                        {
-                            for (int l = j - 2; l <= j + 2; l++)
-                            {
-                                // Si la tuile est dans la map
-                                if (k >= 0 && k < gameMap.height() && l >= 0 && l < gameMap.width())
-                                {
-                                    // Si la tuile est un chemin
-                                    if (map[k][l] == -1)
-                                    {
-                                        // On incremente le nombre de chemin accessible
-                                        mapD2[i][j]++;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            // Calculer D1 et D2
+            getMap(gameMap);
         }
 
 
@@ -128,5 +53,85 @@ public class Bot
                 List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
 
         return command;
+    }
+
+    private void getMap(GameMap gameMap)
+    {
+        // calculate the path
+        Path[] path = gameMap.paths();
+
+        // width = y et height = x
+        int[][] map = new int[gameMap.height()][gameMap.width()];
+        mapD1 = new int[gameMap.height()][gameMap.width()];
+        mapD2 = new int[gameMap.height()][gameMap.width()];
+
+        // initialize la map a zero
+        for (int i = 0; i < gameMap.height(); i++)
+        {
+            for (int j = 0; j < gameMap.width(); j++)
+            {
+                map[i][j] = 0;
+                mapD1[i][j] = 0;
+                mapD2[i][j] = 0;
+            }
+        }
+
+        // Ajouter les chemin comme -1
+        for (int i = 0; i < path.length; i++) {
+            for (int j = 0; j < path[i].tiles().length; j++) {
+                // le point du chemin
+                Point point = path[i].tiles()[j];
+                map[point.y()][point.x()] = -1;
+                mapD1[point.y()][point.x()] = -1;
+                mapD2[point.y()][point.x()] = -1;
+            }
+        }
+
+        // On itterre sur la map pour calculer le nombre de tuiles du chemin accessible depuis chaque tuile
+        for (int i = 0; i < gameMap.height(); i++)
+        {
+            for (int j = 0; j < gameMap.width(); j++)
+            {
+                // Si la tuile n'est pas un chemin
+                if (map[i][j] != -1)
+                {
+                    // On itterre sur les tuiles adjacentes avec D1
+                    for (int k = i - 1; k <= i + 1; k++)
+                    {
+                        for (int l = j - 1; l <= j + 1; l++)
+                        {
+                            // Si la tuile est dans la map
+                            if (k >= 0 && k < gameMap.height() && l >= 0 && l < gameMap.width())
+                            {
+                                // Si la tuile est un chemin
+                                if (map[k][l] == -1)
+                                {
+                                    // On incremente le nombre de chemin accessible
+                                    mapD1[i][j]++;
+                                }
+                            }
+                        }
+                    }
+
+                    // On itterre sur les tuiles adjacentes avec D2
+                    for (int k = i - 2; k <= i + 2; k++)
+                    {
+                        for (int l = j - 2; l <= j + 2; l++)
+                        {
+                            // Si la tuile est dans la map
+                            if (k >= 0 && k < gameMap.height() && l >= 0 && l < gameMap.width())
+                            {
+                                // Si la tuile est un chemin
+                                if (map[k][l] == -1)
+                                {
+                                    // On incremente le nombre de chemin accessible
+                                    mapD2[i][j]++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
