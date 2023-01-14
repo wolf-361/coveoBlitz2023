@@ -8,6 +8,7 @@ import codes.blitz.game.message.game.commands.*;
 import codes.blitz.game.message.game.enemies.EnemyType;
 import codes.blitz.game.message.game.towers.TowerType;
 import codes.blitz.game.message.game.Path;
+import org.glassfish.grizzly.utils.Pair;
 
 import java.util.*;
 
@@ -16,11 +17,14 @@ public class Bot
     private GameMap gameMap;
     // map Distance 1 et 2
     private int[][] mapD1, mapD2;
-
+    // Map Max value
+    private int maxD1 = 0, maxD2 = 0;
     // Listes des truc a placer
+    private List<Point> pufferToPlace = new ArrayList<>();
+    private List<Point> lanceToPlace = new ArrayList<>();
     public Bot()
     {
-        System.out.println("Papa ?");
+        System.out.println("Papa ? (Daddy)");
         // initialize some variables you will need throughout the game here
     }
 
@@ -31,7 +35,7 @@ public class Bot
     {
         Command command =  new Command();
 
-        // get the map
+        // avant le jeux
         if (gameMessage.round().intValue() == 0)
         {
             // get the original map
@@ -39,85 +43,68 @@ public class Bot
             // Calculer D1 et D2
             getMap();
 
-            // Calculer tous les nombre de chemin de 3
+            // Calculer les points a placer
+            getPufferList();
+            getLanceList();
 
-
-
+            // print lance
+            System.out.println("Lance : ");
+            for (Point p : lanceToPlace)
+            {
+                System.out.println(p.x() + " " + p.y());
+            }
         }
 
-        // Placer les unités sur les troisChemin
+        // premier tour de jeux
+        if (gameMessage.round().intValue() == 1) {
+            // 3 lance
+            for (int i = 0; i < 3; i++) {
+                if (lanceToPlace.size() > 0) {
+                    command.addAction(new CommandActionBuild(TowerType.SPEAR_SHOOTER, lanceToPlace.get(0)));
+                    lanceToPlace.remove(0);
+                }
+            }
+        }
 
-        int i = 0;
+        // Placer les unités
+
         int sentNumber = 0;
 
-        double fric = gameMessage.teamInfos().get(gameMessage.teamId()).money().doubleValue();
+        int monaie = gameMessage.teamInfos().get(gameMessage.teamId()).money().intValue();
 
-        if(gameMessage.round().equals(1)) {
-            while (fric >= 15 && sentNumber < 8) {
-                command.addAction(new CommandActionSendReinforcements(EnemyType.LVL2, List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
-                fric -= 15;
-                sentNumber++;
-            }
-        }
 
-        if((int)gameMessage.round() >= 15){
-            while (fric >= 120 && sentNumber < 3) {
-                command.addAction(new CommandActionSendReinforcements(EnemyType.LVL9, List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
-                fric -= 120;
-                sentNumber++;
-            }
-        }
 
-        while(fric >= 280) {
-            // make a tupple of the number of tiles and the point
-            maxPath = (0, new Point(0,0));
 
-            for (int i = 0; i < gameMap.height(); i++)
-            {
-                for (int j = 0; j < gameMap.width(); j++)
-                {
-                    if (mapD1[i][j] >= 2)
-                    {
-                        if (mapD1[i][j] > maxPath.getKey())
-                        {
-                            maxPath = (mapD1[i][j], new Point(i, j));
-                        }
+        return command;
+    }
+
+    private void getLanceList() {
+        int LanceMax = 4;
+        while (LanceMax > 4) {
+            for (int i = 0; i < mapD2.length; i++) {
+                for (int j = 0; j < mapD2[i].length; j++) {
+                    if (mapD2[i][j] == LanceMax) {
+                        lanceToPlace.add(new Point(i, j));
                     }
                 }
             }
-            Point newPoint = maxPath.getValue();
-            command.addAction((new CommandActionBuild(TowerType.SPIKE_SHOOTER, newPoint)));
+            LanceMax--;
         }
+        Collections.shuffle(lanceToPlace);
+    }
 
-        while (fric >= 20000000) {
-
-            boolean placed = false;
-
-            while (!placed) {
-                int x = (int) (Math.random() * (gameMessage.map().width() - 1));
-                int y = (int) (Math.random() * (gameMessage.map().height() - 1));
-                Point newPoint = new Point(x, y);
-
-                if (gameMessage.playAreas().get(gameMessage.teamId()).grid().isEmpty(newPoint)) {
-                    command.addAction((new CommandActionBuild(TowerType.SPEAR_SHOOTER, newPoint)));
-
-                    System.out.println("New tower at " + x + "-" + y);
-                    placed = true;
-                    break;
-
+    private void getPufferList() {
+        // itérer sur les points de la map
+        while (maxD1 >= 3) {
+            for (int i = 0; i < mapD1.length; i++) {
+                for (int j = 0; j < mapD1[i].length; j++) {
+                    if (mapD1[i][j] == maxD1) {
+                        pufferToPlace.add(new Point(i, j));
+                    }
                 }
             }
-
-            fric -= 200;
+            maxD1--;
         }
-
-        // 3 possible commands: BUILD, SELL OR SEND_REINFORCEMENT ! Here are a few examples.
-//        command.addAction(new CommandActionBuild(TowerType.SPIKE_SHOOTER, new Point(10,10)));
-//        command.addAction(new CommandActionBuild(TowerType.SPEAR_SHOOTER, new Point(5, 4)));
-//        command.addAction(new CommandActionSell(new Point(10,10)));
-//        command.addAction(new CommandActionSendReinforcements(EnemyType.LVL1,
-//                List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
-        return command;
     }
 
     private void getMap()
@@ -195,6 +182,10 @@ public class Bot
                             }
                         }
                     }
+
+                    // On compare le nombre de chemin accessible avec le max
+                    maxD1 = Math.max(maxD1, mapD1[i][j]);
+                    maxD2 = Math.max(maxD2, mapD2[i][j]);
                 }
             }
         }
