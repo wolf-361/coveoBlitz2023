@@ -1,5 +1,7 @@
 package codes.blitz.game.bot;
 
+import codes.blitz.game.message.game.GameMap;
+import codes.blitz.game.message.game.Path;
 import codes.blitz.game.message.game.Point;
 import codes.blitz.game.message.game.GameMessage;
 import codes.blitz.game.message.game.commands.Command;
@@ -10,18 +12,24 @@ import codes.blitz.game.message.game.enemies.EnemyType;
 import codes.blitz.game.message.game.towers.TowerType;
 
 import java.util.List;
+import java.util.Map;
 
 public class Bot
 {
+    private GameMap gameMap;
+    // map Distance 1 et 2
+    private int[][] mapD1, mapD2;
+
+    // Si les unités nécessaires sont déja placer
+    private boolean lancier, poissonHerisson, cannonier;
+
     public Bot()
     {
         System.out.println("Initializing your super duper mega bot.");
         // initialize some variables you will need throughout the game here
-
-        // get the game state and the list of free tiles
-        GameMessage gameMessage = GameMessage.getGameMessage();
-        List<Point> freeTiles = gameMessage.getFreeTiles();
-
+        lancier = false;
+        poissonHerisson = false;
+        cannonier = false;
     }
 
     /*
@@ -31,15 +39,122 @@ public class Bot
     {
         Command command =  new Command();
 
-        // 3 possible commands: BUILD, SELL OR SEND_REINFORCEMENT ! Here are a few examples.
-
-        // build a tower on a free tile (if you have enough money)
-        if (gameMessage.getMoney() >= TowerType.TOWER_1.getCost())
+        // get the map
+        if (gameMessage.round().intValue() == 0)
         {
-            command.setAction(new CommandActionBuild(TowerType.TOWER_1, gameMessage.getFreeTiles().get(0)));
+            // get the original map
+            gameMap = gameMessage.map();
+
+            // calculate the path
+            Path[] path = gameMap.paths();
+
+            // width = y et height = x
+            int[][] map = new int[gameMap.height()][gameMap.width()];
+
+            // initialize la map a zero
+            for (int i = 0; i < gameMap.height(); i++)
+            {
+                for (int j = 0; j < gameMap.width(); j++)
+                {
+                    map[i][j] = 0;
+                }
+            }
+
+            // Ajouter les chemin comme -1
+            for (int i = 0; i < path.length; i++) {
+                for (int j = 0; j < path[i].tiles().length; j++) {
+                    // le point du chemin
+                    Point point = path[i].tiles()[j];
+                    map[point.y()][point.x()] = -1;
+                }
+            }
+
+            // On affiche la map
+            System.out.println("Map : ");
+            for (int i = 0; i < gameMap.height(); i++)
+            {
+                for (int j = 0; j < gameMap.width(); j++)
+                {
+                    System.out.print(map[i][j] + " ");
+                }
+                System.out.println();
+            }
+/*
+            // On initialise les maps D1 et D2
+            mapD1 = map;
+            mapD2 = map;
+
+            // On itterre sur la map pour calculer le nombre de tuiles du chemin accessible depuis chaque tuile
+            for (int i = 0; i < gameMap.width(); i++)
+            {
+                for (int j = 0; j < gameMap.height(); j++)
+                {
+                    // Si la tuile n'est pas un chemin
+                    if (map[i][j] != -1)
+                    {
+                        // On itterre sur les tuiles adjacentes avec D1
+                        for (int k = i - 1; k <= i + 1; k++)
+                        {
+                            for (int l = j - 1; l <= j + 1; l++)
+                            {
+                                // Si la tuile adjacente est dans la map
+                                if (k >= 0 && k < gameMap.width() && l >= 0 && l < gameMap.height())
+                                {
+                                    // Si la tuile adjacente est un chemin
+                                    if (map[k][l] == -1)
+                                    {
+                                        // On ajoute 1 au nombre de chemin accessible depuis la tuile
+                                        mapD1[i][j]++;
+                                    }
+                                }
+                            }
+                        }
+
+                        // On itterre sur les tuiles adjacentes avec D2
+                        for (int k = i - 2; k <= i + 2; k++)
+                        {
+                            for (int l = j - 2; l <= j + 2; l++)
+                            {
+                                // Si la tuile adjacente est dans la map
+                                if (k >= 0 && k < gameMap.width() && l >= 0 && l < gameMap.height())
+                                {
+                                    // Si la tuile adjacente est un chemin
+                                    if (map[k][l] == -1)
+                                    {
+                                        // On ajoute 1 au nombre de chemin accessible depuis la tuile
+                                        mapD2[i][j]++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }*/
+/*
+            // Afficher la map D1
+            System.out.println("Map D1");
+            for (int i = 0; i < gameMap.width(); i++)
+            {
+                for (int j = 0; j < gameMap.height(); j++)
+                {
+                    System.out.print(mapD1[i][j] + " ");
+                }
+                System.out.println();
+            }
+
+            // Afficher la map D2
+            System.out.println("Map D2");
+            for (int i = 0; i < gameMap.width(); i++)
+            {
+                for (int j = 0; j < gameMap.height(); j++)
+                {
+                    System.out.print(mapD2[i][j] + " ");
+                }
+                System.out.println();
+            }*/
         }
 
-        // Send a reinforcement to the enemy
+
         command.addAction(new CommandActionSendReinforcements(EnemyType.LVL1,
                 List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
 
