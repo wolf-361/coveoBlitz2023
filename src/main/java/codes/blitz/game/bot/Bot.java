@@ -1,14 +1,12 @@
 package codes.blitz.game.bot;
 
 import codes.blitz.game.message.game.GameMap;
-import codes.blitz.game.message.game.PlayArea;
 import codes.blitz.game.message.game.Point;
 import codes.blitz.game.message.game.GameMessage;
 import codes.blitz.game.message.game.commands.*;
 import codes.blitz.game.message.game.enemies.EnemyType;
 import codes.blitz.game.message.game.towers.TowerType;
 import codes.blitz.game.message.game.Path;
-import org.glassfish.grizzly.utils.Pair;
 
 import java.util.*;
 
@@ -22,6 +20,12 @@ public class Bot
     // Listes des truc a placer
     private List<Point> pufferToPlace = new ArrayList<>();
     private List<Point> lanceToPlace = new ArrayList<>();
+    private List<Point> cannonToPlace = new ArrayList<>();
+
+    private int compteur = 0;
+
+    private boolean initWasDone = false;
+
     public Bot()
     {
         System.out.println("Papa ? (Daddy)");
@@ -33,6 +37,7 @@ public class Bot
      */
     public Command getCommand(GameMessage gameMessage)
     {
+
         Command command =  new Command();
 
         // avant le jeux
@@ -43,68 +48,124 @@ public class Bot
             // Calculer D1 et D2
             getMap();
 
+
             // Calculer les points a placer
             getPufferList();
             getLanceList();
+            getCanonList();
 
-            // print lance
-            System.out.println("Lance : ");
-            for (Point p : lanceToPlace)
-            {
-                System.out.println(p.x() + " " + p.y());
-            }
+
+            // print
+            System.out.println("Puffer : " + pufferToPlace.size());
+
+
+            System.out.println("Lance : " + lanceToPlace.size());
+
+
+            // Imprimer les max
+            System.out.println("Max D1 : " + maxD1);
+            System.out.println("Max D2 : " + maxD2);
         }
 
         // premier tour de jeux
-        if (gameMessage.round().intValue() == 1) {
-            // 3 lance
+        if (!initWasDone) {
+            // 3 lance et attaque 3 enemis
             for (int i = 0; i < 3; i++) {
                 if (lanceToPlace.size() > 0) {
                     command.addAction(new CommandActionBuild(TowerType.SPEAR_SHOOTER, lanceToPlace.get(0)));
                     lanceToPlace.remove(0);
+                    command.addAction(new CommandActionSendReinforcements(EnemyType.LVL1, List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
                 }
+
+                initWasDone = true;
             }
         }
 
-        // Placer les unités
-
-        int sentNumber = 0;
-
         int monaie = gameMessage.teamInfos().get(gameMessage.teamId()).money().intValue();
 
+        // Action pour les autres tour de jeux
 
-
+        // placer les puffers
+        if (compteur % 2 == 0) {
+            if (pufferToPlace.size() > 0 && monaie >= 280) {
+                command.addAction(new CommandActionBuild(TowerType.SPIKE_SHOOTER, pufferToPlace.get(0)));
+                pufferToPlace.remove(0);
+                // retire l'argent
+                monaie -= 280;
+                // change le compteur
+                compteur++;
+            } else if (cannonToPlace.size() > 0 && monaie >= 600) {
+                command.addAction(new CommandActionBuild(TowerType.BOMB_SHOOTER, cannonToPlace.get(0)));
+                cannonToPlace.remove(0);
+                // retire l'argent
+                monaie -= 600;
+                // change le compteur
+                compteur++;
+            }
+        } else if (compteur % 2 == 1 && monaie >= 200 && lanceToPlace.size() > 0) {
+            command.addAction(new CommandActionBuild(TowerType.SPEAR_SHOOTER, lanceToPlace.get(0)));
+            // TODO attaquer un enemie
+            lanceToPlace.remove(0);
+            // retire l'argent
+            monaie -= 200;
+            // change le compteur
+            compteur++;
+        } else {
+            // change le compteur
+            compteur++;
+        }
 
         return command;
     }
 
-    private void getLanceList() {
-        int LanceMax = 4;
-        while (LanceMax > 4) {
-            for (int i = 0; i < mapD2.length; i++) {
-                for (int j = 0; j < mapD2[i].length; j++) {
-                    if (mapD2[i][j] == LanceMax) {
-                        lanceToPlace.add(new Point(i, j));
+    private void getCanonList() {
+        // les meilleurs points pour les canons
+        for (int i = maxD2; i > 6; i--)
+        {
+            for (int j = 0; j < mapD2.length; j++)
+            {
+                for (int k = 0; k < mapD2[j].length; k++)
+                {
+                    if (mapD2[j][k] == i)
+                    {
+                        cannonToPlace.add(new Point(k, j));
                     }
                 }
             }
-            LanceMax--;
+        }
+    }
+
+    private void getLanceList() {
+        // les pire place pour les lance
+        for (int i = 6; i > 0; i--)
+        {
+            for (int j = 0; j < mapD2.length; j++)
+            {
+                for (int k = 0; k < mapD2[j].length; k++)
+                {
+                    if (mapD2[j][k] == i)
+                    {
+                        lanceToPlace.add(new Point(k, j));
+                    }
+                }
+            }
         }
         Collections.shuffle(lanceToPlace);
     }
 
     private void getPufferList() {
-        // itérer sur les points de la map
-        while (maxD1 >= 3) {
-            for (int i = 0; i < mapD1.length; i++) {
-                for (int j = 0; j < mapD1[i].length; j++) {
-                    if (mapD1[i][j] == maxD1) {
-                        pufferToPlace.add(new Point(i, j));
+        // width = y et height = x et height = i et width = j
+        // itérer sur les points de la map D1
+        for (int i = maxD1; i >= 4; i--) {
+            for (int j = 0; j < mapD1.length; j++) {
+                for (int k = 0; k < mapD1[j].length; k++) {
+                    if (mapD1[j][k] == i) {
+                        pufferToPlace.add(new Point(k, j));
                     }
                 }
             }
-            maxD1--;
         }
+
     }
 
     private void getMap()
@@ -112,7 +173,7 @@ public class Bot
         // calculate the path
         Path[] path = gameMap.paths();
 
-        // width = y et height = x
+        // width = y et height = x et height = i et width = j
         int[][] map = new int[gameMap.height()][gameMap.width()];
         mapD1 = new int[gameMap.height()][gameMap.width()];
         mapD2 = new int[gameMap.height()][gameMap.width()];
@@ -139,12 +200,14 @@ public class Bot
             }
         }
 
+
+
         // On itterre sur la map pour calculer le nombre de tuiles du chemin accessible depuis chaque tuile
         for (int i = 0; i < gameMap.height(); i++)
         {
             for (int j = 0; j < gameMap.width(); j++)
             {
-                // Si la tuile n'est pas un chemin
+                // Si la tuile n'est pas un chemin ou un obstacle
                 if (map[i][j] != -1)
                 {
                     // On itterre sur les tuiles adjacentes avec D1
