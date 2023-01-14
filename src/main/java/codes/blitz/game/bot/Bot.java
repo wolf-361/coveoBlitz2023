@@ -18,7 +18,7 @@ public class Bot
     private int[][] mapD1, mapD2;
 
     // Listes des truc a placer
-    List<Point> poissonHerisson = new ArrayList<>();
+    List<Point> pufferSpot = new ArrayList<>();
 
     // Si les unités nécessaires sont déja placer
     private boolean lancier, cannonier;
@@ -52,9 +52,9 @@ public class Bot
             {
                 for (int j = 0; j < gameMap.width(); j++)
                 {
-                    if (mapD1[i][j] == 3)
+                    if (mapD1[i][j] >= 3)
                     {
-                        poissonHerisson.add(new Point(j, i));
+                        pufferSpot.add(new Point(j, i));
                     }
                 }
             }
