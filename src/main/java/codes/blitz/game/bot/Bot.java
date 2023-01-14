@@ -25,7 +25,7 @@ public class Bot
 
     public Bot()
     {
-        System.out.println("Initializing your super duper mega bot.");
+        System.out.println("Daddy");
         // initialize some variables you will need throughout the game here
         lancier = false;
         poissonHerisson = false;
@@ -75,17 +75,6 @@ public class Bot
                 }
             }
 
-            // On affiche la map
-            System.out.println("Map : ");
-            for (int i = 0; i < gameMap.height(); i++)
-            {
-                for (int j = 0; j < gameMap.width(); j++)
-                {
-                    System.out.print(map[i][j] + " ");
-                }
-                System.out.println();
-            }
-
             // On itterre sur la map pour calculer le nombre de tuiles du chemin accessible depuis chaque tuile
             for (int i = 0; i < gameMap.height(); i++)
             {
@@ -131,28 +120,6 @@ public class Bot
                         }
                     }
                 }
-            }
-
-            // Afficher la map D1
-            System.out.println("Map D1");
-            for (int i = 0; i < gameMap.height(); i++)
-            {
-                for (int j = 0; j < gameMap.width(); j++)
-                {
-                    System.out.print(mapD1[i][j] + " ");
-                }
-                System.out.println();
-            }
-
-            // Afficher la map D2
-            System.out.println("Map D2");
-            for (int i = 0; i < gameMap.height(); i++)
-            {
-                for (int j = 0; j < gameMap.width(); j++)
-                {
-                    System.out.print(mapD2[i][j] + " ");
-                }
-                System.out.println();
             }
         }
 
