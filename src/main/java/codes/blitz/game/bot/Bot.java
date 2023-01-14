@@ -23,11 +23,6 @@ public class Bot
     private List<Point> cannonToPlace = new ArrayList<>();
     private List<Point> dernierRecours = new ArrayList<>();
 
-    // Cossin attaquer Luc S
-
-    private ArrayList<EnemyType> attack = new ArrayList<>();
-    private ArrayList<Integer> price = new ArrayList<>();
-    private ArrayList<Integer> numAttack = new ArrayList<>();
 
     private int compteur = 0;
 
@@ -38,66 +33,6 @@ public class Bot
         System.out.println("Papa ? (Daddy)");
         // initialize some variables you will need throughout the game here
 
-        attack.add(EnemyType.LVL2);
-        attack.add(EnemyType.LVL2);
-        attack.add(EnemyType.LVL3);
-        attack.add(EnemyType.LVL3);
-        attack.add(EnemyType.LVL3);
-        attack.add(EnemyType.LVL4);
-        attack.add(EnemyType.LVL4);
-        attack.add(EnemyType.LVL1);
-        attack.add(EnemyType.LVL1);
-        attack.add(EnemyType.LVL1);
-        attack.add(EnemyType.LVL1);
-        attack.add(EnemyType.LVL8);
-        attack.add(EnemyType.LVL8);
-        attack.add(EnemyType.LVL8);
-        attack.add(EnemyType.LVL8);
-        attack.add(EnemyType.LVL8);
-        attack.add(EnemyType.LVL8);
-        attack.add(EnemyType.LVL8);
-        attack.add(EnemyType.LVL8);
-        attack.add(EnemyType.LVL8);
-        attack.add(EnemyType.LVL8);
-        attack.add(EnemyType.LVL10);
-        attack.add(EnemyType.LVL10);
-        attack.add(EnemyType.LVL10);
-        attack.add(EnemyType.LVL11);
-
-
-        price.add(15);
-        price.add(15);
-        price.add(14);
-        price.add(14);
-        price.add(14);
-        price.add(24);
-        price.add(24);
-        price.add(15);
-        price.add(15);
-        price.add(15);
-        price.add(15);
-        price.add(115);
-        price.add(115);
-        price.add(115);
-        price.add(115);
-        price.add(115);
-        price.add(115);
-        price.add(115);
-        price.add(115);
-        price.add(115);
-        price.add(115);
-        price.add(160);
-        price.add(160);
-        price.add(160);
-        price.add(250);
-
-
-        numAttack.add(3);
-        numAttack.add(3);
-        numAttack.add(8);
-        numAttack.add(5);
-        numAttack.add(5);
-        numAttack.add(8);
     }
 
     /*
@@ -123,18 +58,8 @@ public class Bot
             getPufferList();
             getLanceList();
             getCanonList();
+            getDernierRecours();
 
-
-            // print
-            System.out.println("Puffer : " + pufferToPlace.size());
-
-
-            System.out.println("Lance : " + lanceToPlace.size());
-
-
-            // Imprimer les max
-            System.out.println("Max D1 : " + maxD1);
-            System.out.println("Max D2 : " + maxD2);
         }
 
         // premier tour de jeux
@@ -144,7 +69,7 @@ public class Bot
                 if (lanceToPlace.size() > 0) {
                     command.addAction(new CommandActionBuild(TowerType.SPEAR_SHOOTER, lanceToPlace.get(0)));
                     lanceToPlace.remove(0);
-                    command.addAction(new CommandActionSendReinforcements(EnemyType.LVL1, List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
+                    command.addAction(new CommandActionSendReinforcements(EnemyType.LVL2, List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
                 }
 
                 initWasDone = true;
@@ -155,7 +80,7 @@ public class Bot
 
         // Action pour les autres tour de jeux
 
-        if (gameMessage.round().intValue() < 10) {
+        if (gameMessage.round().intValue() < 6) {
             if (compteur % 2 == 0 && pufferToPlace.size() > 0 && monaie >= 280) {
                 command.addAction(new CommandActionBuild(TowerType.SPIKE_SHOOTER, pufferToPlace.get(0)));
                 pufferToPlace.remove(0);
@@ -166,194 +91,52 @@ public class Bot
 
             } else if (compteur % 2 == 1 && monaie >= 200 && lanceToPlace.size() > 0) {
                 command.addAction(new CommandActionBuild(TowerType.SPEAR_SHOOTER, lanceToPlace.get(0)));
-                // TODO attaquer un enemie
-
-                //cible attack personne avec le plus de vie, non nous
-                String[] teams = gameMessage.teams();
-                int highPassiveIncome = 0;
-                String target;
-                if(teams[0].equals(gameMessage.teamId()))
-                {
-                    target = teams[1];
-                }
-                else
-                {
-                    target = teams[0];
-                }
-                for(int i = 0; i < teams.length; i++){
-                    if((int)gameMessage.teamInfos().get(teams[i]).payoutBonus().intValue() > highPassiveIncome && teams[i] == gameMessage.teamId()){
-                        highPassiveIncome = (int)gameMessage.teamInfos().get(teams[i]).hp();
-                        target = teams[i];
-                    }
-                }
-
-                int round = gameMessage.round().intValue();
-                int longPrice = round, longAttack = round, longNumAttack = round;
-                if(round > attack.size())
-                {
-                    longAttack = attack.size() - 1;
-                }
-
-                if (round < price.size()) {
-                    longPrice = price.size() - 1;
-                }
-
-                if (round < numAttack.size()) {
-                    longNumAttack = numAttack.size() - 1;
-                }
-
-                if(gameMessage.round().equals(1)) {
-                    while (monaie >= price.get(longPrice) && sentNumber < numAttack.get(round)) {
-                        command.addAction(new CommandActionSendReinforcements(attack.get(round), target));
-                        monaie -= price.get(round);
-                        sentNumber++;
-                    }
-                }
-
+                command.addAction(new CommandActionSendReinforcements(EnemyType.LVL2, List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
                 lanceToPlace.remove(0);
                 // retire l'argent
                 monaie -= 200;
                 // change le compteur
                 compteur++;
             }
-            /*
-            // placer les puffers
-            if (compteur % 2 == 0) {
-                if (pufferToPlace.size() > 0 && monaie >= 280) {
-                    command.addAction(new CommandActionBuild(TowerType.SPIKE_SHOOTER, pufferToPlace.get(0)));
-                    pufferToPlace.remove(0);
-                    // retire l'argent
-                    monaie -= 280;
-                    // change le compteur
-                    compteur++;
-                } else if (cannonToPlace.size() > 0 && monaie >= 600) {
-                    command.addAction(new CommandActionBuild(TowerType.BOMB_SHOOTER, cannonToPlace.get(0)));
-                    cannonToPlace.remove(0);
-                    // retire l'argent
-                    monaie -= 600;
-                    // change le compteur
-                    compteur++;
-                }
-            } else if (compteur % 2 == 1 && monaie >= 200 && lanceToPlace.size() > 0) {
-                command.addAction(new CommandActionBuild(TowerType.SPEAR_SHOOTER, lanceToPlace.get(0)));
-                // TODO attaquer un enemie
-                lanceToPlace.remove(0);
-                // retire l'argent
-                monaie -= 200;
-                // change le compteur
-                compteur++;
-            } else {
-                // change le compteur
-                compteur++;
-            } */
+
         } else if (cannonToPlace.size() > 0 && monaie >= 600) {
-            command.addAction(new CommandActionBuild(TowerType.BOMB_SHOOTER, cannonToPlace.get(0)));
-            cannonToPlace.remove(0);
-            // retire l'argent
-            monaie -= 600;
-
-            //cible attack personne avec le plus de vie, non nous
-            String[] teams = gameMessage.teams();
-            int highPassiveIncome = 0;
-            String target;
-            if(teams[0].equals(gameMessage.teamId()))
-            {
-                target = teams[1];
+            if (compteur % 2 == 1) {
+                command.addAction(new CommandActionBuild(TowerType.BOMB_SHOOTER, cannonToPlace.get(0)));
+                cannonToPlace.remove(0);
+                // retire l'argent
+                monaie -= 200;
+                // change le compteur
+                compteur++;
             }
-            else
-            {
-                target = teams[0];
-            }
-            for(int i = 0; i < teams.length; i++){
-                if((int)gameMessage.teamInfos().get(teams[i]).payoutBonus().intValue() > highPassiveIncome && teams[i] == gameMessage.teamId()){
-                    highPassiveIncome = (int)gameMessage.teamInfos().get(teams[i]).hp();
-                    target = teams[i];
+            if (compteur % 2 == 0) {
+                if (gameMessage.round().intValue() > 11) {
+                    command.addAction(new CommandActionSendReinforcements(EnemyType.LVL8, List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
+                } else {
+                    command.addAction(new CommandActionSendReinforcements(EnemyType.LVL2, List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
                 }
+                compteur++;
             }
 
-            int round = gameMessage.round().intValue();
-            int longPrice = round, longAttack = round, longNumAttack = round;
-            if(round > attack.size())
-            {
-                longAttack = attack.size() - 1;
-            }
 
-            if (round < price.size()) {
-                longPrice = price.size() - 1;
-            }
-
-            if (round < numAttack.size()) {
-                longNumAttack = numAttack.size() - 1;
-            }
-
-            if(gameMessage.round().equals(1)) {
-                while (monaie >= price.get(longPrice) && sentNumber < numAttack.get(round)) {
-                    command.addAction(new CommandActionSendReinforcements(attack.get(round), target));
-                    monaie -= price.get(round);
-                    sentNumber++;
-                }
-            }
-
-            lanceToPlace.remove(0);
-            // retire l'argent
-            monaie -= 200;
-            // change le compteur
-            compteur++;
         }
 
         if (dernierRecours.size() > 0 && monaie >= 1000) {
+            System.out.println("Dernier recours");
             command.addAction(new CommandActionBuild(TowerType.BOMB_SHOOTER, dernierRecours.get(0)));
             dernierRecours.remove(0);
-            // retire l'argent
-            monaie -= 600;
 
-            //cible attack personne avec le plus de vie, non nous
-            String[] teams = gameMessage.teams();
-            int highPassiveIncome = 0;
-            String target;
-            if(teams[0].equals(gameMessage.teamId()))
-            {
-                target = teams[1];
-            }
-            else
-            {
-                target = teams[0];
-            }
-            for(int i = 0; i < teams.length; i++){
-                if((int)gameMessage.teamInfos().get(teams[i]).payoutBonus().intValue() > highPassiveIncome && teams[i] == gameMessage.teamId()){
-                    highPassiveIncome = (int)gameMessage.teamInfos().get(teams[i]).hp();
-                    target = teams[i];
-                }
-            }
-
-            int round = gameMessage.round().intValue();
-            int longPrice = round, longAttack = round, longNumAttack = round;
-            if(round > attack.size())
-            {
-                longAttack = attack.size() - 1;
-            }
-
-            if (round < price.size()) {
-                longPrice = price.size() - 1;
-            }
-
-            if (round < numAttack.size()) {
-                longNumAttack = numAttack.size() - 1;
-            }
-
-            if(gameMessage.round().equals(1)) {
-                while (monaie >= price.get(longPrice) && sentNumber < numAttack.get(round)) {
-                    command.addAction(new CommandActionSendReinforcements(attack.get(round), target));
-                    monaie -= price.get(round);
-                    sentNumber++;
-                }
-            }
-
-            lanceToPlace.remove(0);
             // retire l'argent
             monaie -= 200;
             // change le compteur
             compteur++;
+
+            if (compteur % 2 == 0) {
+                if (gameMessage.round().intValue() > 11) {
+                    command.addAction(new CommandActionSendReinforcements(EnemyType.LVL8, List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
+                } else {
+                    command.addAction(new CommandActionSendReinforcements(EnemyType.LVL2, List.of(gameMessage.teams()).stream().filter(teamId -> !teamId.equals(gameMessage.teamId())).findFirst().orElseThrow()));
+                }
+            }
         }
 
 
@@ -364,7 +147,7 @@ public class Bot
 
     private void getCanonList() {
         // les meilleurs points pour les canons
-        for (int i = maxD2; i > 8; i--)
+        for (int i = maxD2; i > 7; i--)
         {
             for (int j = 0; j < mapD2.length; j++)
             {
@@ -382,7 +165,7 @@ public class Bot
 
     private void getLanceList() {
         // les pire place pour les lance
-        for (int i = 8; i > 4; i--)
+        for (int i = 8; i > 6; i--)
         {
             for (int j = 0; j < mapD2.length; j++)
             {
