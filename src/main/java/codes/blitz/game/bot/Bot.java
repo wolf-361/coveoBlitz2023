@@ -5,14 +5,11 @@ import codes.blitz.game.message.game.Path;
 import codes.blitz.game.message.game.Point;
 import codes.blitz.game.message.game.GameMessage;
 import codes.blitz.game.message.game.commands.Command;
-import codes.blitz.game.message.game.commands.CommandActionBuild;
-import codes.blitz.game.message.game.commands.CommandActionSell;
 import codes.blitz.game.message.game.commands.CommandActionSendReinforcements;
 import codes.blitz.game.message.game.enemies.EnemyType;
-import codes.blitz.game.message.game.towers.TowerType;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class Bot
 {
@@ -20,15 +17,17 @@ public class Bot
     // map Distance 1 et 2
     private int[][] mapD1, mapD2;
 
+    // Listes des truc a placer
+    List<Point> poissonHerisson = new ArrayList<>();
+
     // Si les unités nécessaires sont déja placer
-    private boolean lancier, poissonHerisson, cannonier;
+    private boolean lancier, cannonier;
 
     public Bot()
     {
         System.out.println("Daddy");
         // initialize some variables you will need throughout the game here
         lancier = false;
-        poissonHerisson = false;
         cannonier = false;
     }
 
@@ -45,8 +44,23 @@ public class Bot
             // get the original map
             gameMap = gameMessage.map();
             // Calculer D1 et D2
-            getMap(gameMap);
+            getMap();
+
+            // Calculer tous les nombre de chemin de 3
+
+            for (int i = 0; i < gameMap.height(); i++)
+            {
+                for (int j = 0; j < gameMap.width(); j++)
+                {
+                    if (mapD1[i][j] == 3)
+                    {
+                        poissonHerisson.add(new Point(j, i));
+                    }
+                }
+            }
         }
+
+        // Placer les unités sur les troisChemin
 
 
         command.addAction(new CommandActionSendReinforcements(EnemyType.LVL1,
@@ -55,7 +69,7 @@ public class Bot
         return command;
     }
 
-    private void getMap(GameMap gameMap)
+    private void getMap()
     {
         // calculate the path
         Path[] path = gameMap.paths();
